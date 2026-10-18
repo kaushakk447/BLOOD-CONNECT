@@ -97,11 +97,15 @@ public class BloodRequestService {
         
         log.info("Found {} nearby compatible donors", nearbyDonors.size());
         
-        if (nearbyDonors.isEmpty()) {
-            bloodRequest.setStatus(BloodRequest.Status.EXPIRED);
-            bloodRequestRepository.save(bloodRequest);
-            return;
-        }
+       if (nearbyDonors.isEmpty()) {
+              log.info(
+              "No compatible donors found for blood request {}. Keeping request open.",
+               bloodRequest.getId()
+              );
+
+              bloodRequestRepository.save(bloodRequest);
+               return;
+             }
         
         // Create donor requests and send notifications
         for (DonorProfile donorProfile : nearbyDonors) {
