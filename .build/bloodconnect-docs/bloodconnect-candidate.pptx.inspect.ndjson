@@ -1,0 +1,99 @@
+{"kind":"deck","id":"pr/45ocf7","name":"Deck"}
+{"kind":"layout","layoutId":"aee3f5fe-fbf5-4a61-9810-517922a23721","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"3a863103-276d-4435-942a-d5c0db2fb5eb","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/75vwc8","slide":1,"title":"BloodConnect","textShapes":3}
+{"kind":"textbox","id":"sh/5ozmd4je","slide":1,"text":"BloodConnect","textPreview":"BloodConnect","textChars":12,"textLines":1,"bbox":[70,155,470,65]}
+{"kind":"textbox","id":"sh/43ql4zit","slide":1,"text":"Technical overview and implementation guide","textPreview":"Technical overview and implementation guide","textChars":43,"textLines":1,"bbox":[70,230,470,55]}
+{"kind":"textbox","id":"sh/vyx47u1c","slide":1,"text":"React • Spring Boot • PostgreSQL • Docker","textPreview":"React • Spring Boot • PostgreSQL • Docker","textChars":41,"textLines":1,"bbox":[70,306,450,30]}
+{"kind":"image","id":"im/ryl07ydg","slide":1,"name":"","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/75vwc8","slide":1,"text":""}
+{"kind":"slide","id":"sl/mxubzq","slide":2,"title":"Platform architecture","textShapes":9}
+{"kind":"textbox","id":"sh/v6x87q18","slide":2,"text":"Platform architecture","textPreview":"Platform architecture","textChars":21,"textLines":1,"bbox":[70,48,1080,55]}
+{"kind":"shape","id":"sh/wrq9gvit","slide":2,"bbox":[70,118,120,6]}
+{"kind":"textbox","id":"sh/hszq90je","slide":2,"text":"BloodConnect  |  02","textPreview":"BloodConnect  |  02","textChars":19,"textLines":1,"bbox":[1050,52,150,22]}
+{"kind":"textbox","id":"sh/it8ri50z","slide":2,"text":"Browser","textPreview":"Browser","textChars":7,"textLines":1,"bbox":[95,190,210,30]}
+{"kind":"textbox","id":"sh/juh8bq1k","slide":2,"text":"React + Vite\nRoutes, forms, auth state","textPreview":"React + Vite | Routes, forms, auth state","textChars":38,"textLines":2,"bbox":[95,232,210,70]}
+{"kind":"textbox","id":"sh/4vq9kvip","slide":2,"text":"REST API","textPreview":"REST API","textChars":8,"textLines":1,"bbox":[520,190,210,30]}
+{"kind":"textbox","id":"sh/5wzqd0ja","slide":2,"text":"Spring Boot\nControllers, services, JWT","textPreview":"Spring Boot | Controllers, services, JWT","textChars":38,"textLines":2,"bbox":[520,232,210,70]}
+{"kind":"textbox","id":"sh/yx47610f","slide":2,"text":"Database","textPreview":"Database","textChars":8,"textLines":1,"bbox":[930,190,210,30]}
+{"kind":"textbox","id":"sh/zyd8z610","slide":2,"text":"PostgreSQL + Flyway\nPersistence and migrations","textPreview":"PostgreSQL + Flyway | Persistence and migrations","textChars":46,"textLines":2,"bbox":[930,232,240,70]}
+{"kind":"shape","id":"sh/3upcbyhk","slide":2,"bbox":[315,254,165,6]}
+{"kind":"shape","id":"sh/2tgbid0f","slide":2,"bbox":[740,254,145,6]}
+{"kind":"textbox","id":"sh/pwrud8zq","slide":2,"text":"The frontend calls a secured API under /api. The backend keeps business rules out of the UI and persists core records through JPA.","textPreview":"The frontend calls a secured API under /api. The backend keeps business rules out of the UI and persists core records through JPA.","textChars":130,"textLines":1,"bbox":[90,430,1050,65]}
+{"kind":"notes","id":"nt/mxubzq","slide":2,"text":""}
+{"kind":"slide","id":"sl/m8htcp","slide":3,"title":"Frontend application","textShapes":9}
+{"kind":"textbox","id":"sh/47udkzu5","slide":3,"text":"Frontend application","textPreview":"Frontend application","textChars":20,"textLines":1,"bbox":[70,48,1080,55]}
+{"kind":"shape","id":"sh/j61wbutk","slide":3,"bbox":[70,118,120,6]}
+{"kind":"textbox","id":"sh/i5svipcz","slide":3,"text":"BloodConnect  |  03","textPreview":"BloodConnect  |  03","textChars":19,"textLines":1,"bbox":[1050,52,150,22]}
+{"kind":"textbox","id":"sh/h4ju9kve","slide":3,"text":"App.jsx","textPreview":"App.jsx","textChars":7,"textLines":1,"bbox":[90,170,310,28]}
+{"kind":"textbox","id":"sh/w3adgfut","slide":3,"text":"Hydrates the Zustand authentication store and selects public or protected routes.","textPreview":"Hydrates the Zustand authentication store and selects public or protected routes.","textChars":81,"textLines":1,"bbox":[90,202,1030,55]}
+{"kind":"textbox","id":"sh/v21c7ad8","slide":3,"text":"Pages","textPreview":"Pages","textChars":5,"textLines":1,"bbox":[90,285,310,28]}
+{"kind":"textbox","id":"sh/u1sve5c3","slide":3,"text":"Screens cover login, registration, request creation and tracking, donor registration, notifications and administration.","textPreview":"Screens cover login, registration, request creation and tracking, donor registration, notifications and administration.","textChars":119,"textLines":1,"bbox":[90,317,1030,55]}
+{"kind":"textbox","id":"sh/90ju50vi","slide":3,"text":"Service layer","textPreview":"Service layer","textChars":13,"textLines":1,"bbox":[90,400,310,28]}
+{"kind":"textbox","id":"sh/8zqdcvux","slide":3,"text":"Axios calls belong in frontend/src/services/api.js so endpoint configuration stays separate from view components.","textPreview":"Axios calls belong in frontend/src/services/api.js so endpoint configuration stays separate from view components.","textChars":113,"textLines":1,"bbox":[90,432,1030,55]}
+{"kind":"textbox","id":"sh/e14jupsv","slide":3,"text":"Routes are protected by the presence of an authenticated user.","textPreview":"Routes are protected by the presence of an authenticated user.","textChars":62,"textLines":1,"bbox":[90,545,1020,32]}
+{"kind":"notes","id":"nt/m8htcp","slide":3,"text":""}
+{"kind":"slide","id":"sl/0fttla","slide":4,"title":"API endpoints and authentication","textShapes":7}
+{"kind":"textbox","id":"sh/9gj6d4vi","slide":4,"text":"API endpoints and authentication","textPreview":"API endpoints and authentication","textChars":32,"textLines":1,"bbox":[70,48,1080,55]}
+{"kind":"shape","id":"sh/mtsni9w7","slide":4,"bbox":[70,118,120,6]}
+{"kind":"textbox","id":"sh/nu1obeds","slide":4,"text":"BloodConnect  |  04","textPreview":"BloodConnect  |  04","textChars":19,"textLines":1,"bbox":[1050,52,150,22]}
+{"kind":"textbox","id":"sh/0ra5gze1","slide":4,"text":"Authentication","textPreview":"Authentication","textChars":14,"textLines":1,"bbox":[90,170,330,35]}
+{"kind":"textbox","id":"sh/lsj694vm","slide":4,"text":"POST /api/auth/register\nPOST /api/auth/login\nPOST /api/auth/refresh\nGET /api/auth/health","textPreview":"POST /api/auth/register | POST /api/auth/login | POST /api/auth/refresh | GET /api/auth/health","textChars":88,"textLines":4,"bbox":[90,220,350,155]}
+{"kind":"textbox","id":"sh/ypsnepwv","slide":4,"text":"Blood requests","textPreview":"Blood requests","textChars":14,"textLines":1,"bbox":[600,170,330,35]}
+{"kind":"textbox","id":"sh/zq1o7udg","slide":4,"text":"POST /api/blood-requests\nGET /api/blood-requests/{id}\nGET /api/blood-requests\nPATCH /api/blood-requests/{id}","textPreview":"POST /api/blood-requests | GET /api/blood-requests/{id} | GET /api/blood-requests | PATCH /api/blood-requests/{id}","textChars":108,"textLines":4,"bbox":[600,220,440,155]}
+{"kind":"textbox","id":"sh/knupc3u5","slide":4,"text":"The JWT filter identifies the caller. Controllers read the user ID and delegate validation and business rules to services.","textPreview":"The JWT filter identifies the caller. Controllers read the user ID and delegate validation and business rules to services.","textChars":122,"textLines":1,"bbox":[90,475,1060,55]}
+{"kind":"notes","id":"nt/0fttla","slide":4,"text":""}
+{"kind":"slide","id":"sl/j1gymz","slide":5,"title":"Donor matching workflow","textShapes":9}
+{"kind":"textbox","id":"sh/kjedwnyd","slide":5,"text":"Donor matching workflow","textPreview":"Donor matching workflow","textChars":23,"textLines":1,"bbox":[70,48,1080,55]}
+{"kind":"shape","id":"sh/ji5wnihs","slide":5,"bbox":[70,118,120,6]}
+{"kind":"textbox","id":"sh/yhwvudg7","slide":5,"text":"BloodConnect  |  05","textPreview":"BloodConnect  |  05","textChars":19,"textLines":1,"bbox":[1050,52,150,22]}
+{"kind":"textbox","id":"sh/to7etczu","slide":5,"text":"1  Request created","textPreview":"1  Request created","textChars":18,"textLines":1,"bbox":[90,190,240,32]}
+{"kind":"textbox","id":"sh/8nyd07y9","slide":5,"text":"Requested blood group, location and radius","textPreview":"Requested blood group, location and radius","textChars":42,"textLines":1,"bbox":[90,228,220,58]}
+{"kind":"textbox","id":"sh/7mpwr2ho","slide":5,"text":"2  Eligible donors","textPreview":"2  Eligible donors","textChars":18,"textLines":1,"bbox":[440,190,240,32]}
+{"kind":"textbox","id":"sh/6lgvyxgj","slide":5,"text":"Verified + available + compatible group","textPreview":"Verified + available + compatible group","textChars":39,"textLines":1,"bbox":[440,228,250,58]}
+{"kind":"textbox","id":"sh/9s3uh8zq","slide":5,"text":"3  Nearby donors","textPreview":"3  Nearby donors","textChars":16,"textLines":1,"bbox":[815,190,240,32]}
+{"kind":"textbox","id":"sh/orudo3y5","slide":5,"text":"Haversine distance filter and proximity sort","textPreview":"Haversine distance filter and proximity sort","textChars":44,"textLines":1,"bbox":[815,228,270,58]}
+{"kind":"shape","id":"sh/6dgbe1gf","slide":5,"bbox":[330,244,75,6]}
+{"kind":"shape","id":"sh/repsn6h0","slide":5,"bbox":[700,244,75,6]}
+{"kind":"textbox","id":"sh/sfitgbyl","slide":5,"text":"MatchingService uses a compatibility map and an Earth radius of 6,371 km. For high volume, move radius search into a geospatial database query.","textPreview":"MatchingService uses a compatibility map and an Earth radius of 6,371 km. For high volume, move radius search into a geospatial database ...","textChars":143,"textLines":1,"bbox":[90,440,1040,60]}
+{"kind":"notes","id":"nt/j1gymz","slide":5,"text":""}
+{"kind":"slide","id":"sl/rzaka7","slide":6,"title":"Database model","textShapes":10}
+{"kind":"textbox","id":"sh/uhgfe5w7","slide":6,"text":"Database model","textPreview":"Database model","textChars":14,"textLines":1,"bbox":[70,48,1080,55]}
+{"kind":"shape","id":"sh/hk7y90fy","slide":6,"bbox":[70,118,120,6]}
+{"kind":"textbox","id":"sh/wjyxgfed","slide":6,"text":"BloodConnect  |  06","textPreview":"BloodConnect  |  06","textChars":19,"textLines":1,"bbox":[1050,52,150,22]}
+{"kind":"textbox","id":"sh/j6pgbaxo","slide":6,"text":"users","textPreview":"users","textChars":5,"textLines":1,"bbox":[105,190,180,32]}
+{"kind":"textbox","id":"sh/ilgfi5wj","slide":6,"text":"Identity, role, account status","textPreview":"Identity, role, account status","textChars":30,"textLines":1,"bbox":[105,230,190,45]}
+{"kind":"textbox","id":"sh/58rydkfu","slide":6,"text":"donor_profiles","textPreview":"donor_profiles","textChars":14,"textLines":1,"bbox":[410,190,230,32]}
+{"kind":"textbox","id":"sh/47yxkfe9","slide":6,"text":"Eligibility, blood group, location","textPreview":"Eligibility, blood group, location","textChars":34,"textLines":1,"bbox":[410,230,240,45]}
+{"kind":"textbox","id":"sh/ra9gfux0","slide":6,"text":"blood_requests","textPreview":"blood_requests","textChars":14,"textLines":1,"bbox":[760,190,230,32]}
+{"kind":"textbox","id":"sh/690fmpwf","slide":6,"text":"Demand, urgency, location, status","textPreview":"Demand, urgency, location, status","textChars":33,"textLines":1,"bbox":[760,230,250,45]}
+{"kind":"shape","id":"sh/s361sje1","slide":6,"bbox":[285,238,95,6]}
+{"kind":"shape","id":"sh/d4f21ofm","slide":6,"bbox":[655,238,70,6]}
+{"kind":"textbox","id":"sh/q1ojq9wb","slide":6,"text":"donor_requests records each matched donor and response. notifications inform users. audit_logs retain an activity trail.","textPreview":"donor_requests records each matched donor and response. notifications inform users. audit_logs retain an activity trail.","textChars":120,"textLines":1,"bbox":[105,420,980,48]}
+{"kind":"textbox","id":"sh/r2xkzexw","slide":6,"text":"Flyway migration V1 creates tables and indexes. Add future changes as new migrations rather than modifying applied files.","textPreview":"Flyway migration V1 creates tables and indexes. Add future changes as new migrations rather than modifying applied files.","textChars":121,"textLines":1,"bbox":[105,500,980,42]}
+{"kind":"notes","id":"nt/rzaka7","slide":6,"text":""}
+{"kind":"slide","id":"sl/oizdyj","slide":7,"title":"Local development","textShapes":10}
+{"kind":"textbox","id":"sh/tgzy14zy","slide":7,"text":"Local development","textPreview":"Local development","textChars":17,"textLines":1,"bbox":[70,48,1080,55]}
+{"kind":"shape","id":"sh/6tofqp0n","slide":7,"bbox":[70,118,120,6]}
+{"kind":"textbox","id":"sh/7uhgzuh8","slide":7,"text":"BloodConnect  |  07","textPreview":"BloodConnect  |  07","textChars":19,"textLines":1,"bbox":[1050,52,150,22]}
+{"kind":"textbox","id":"sh/kr6xofih","slide":7,"text":"Quick start","textPreview":"Quick start","textChars":11,"textLines":1,"bbox":[90,170,280,34]}
+{"kind":"textbox","id":"sh/5sfyxkz2","slide":7,"text":"docker compose up --build","textPreview":"docker compose up --build","textChars":25,"textLines":1,"bbox":[90,220,440,38]}
+{"kind":"textbox","id":"sh/ipofm50b","slide":7,"text":"Frontend","textPreview":"Frontend","textChars":8,"textLines":1,"bbox":[90,310,310,28]}
+{"kind":"textbox","id":"sh/jqxgvahw","slide":7,"text":"Open http://localhost:3000 after the frontend container starts.","textPreview":"Open http://localhost:3000 after the frontend container starts.","textChars":63,"textLines":1,"bbox":[90,342,1030,55]}
+{"kind":"textbox","id":"sh/4nah0jil","slide":7,"text":"Health check","textPreview":"Health check","textChars":12,"textLines":1,"bbox":[90,405,310,28]}
+{"kind":"textbox","id":"sh/pojy9oz6","slide":7,"text":"Open http://localhost:8080/api/auth/health to verify the API.","textPreview":"Open http://localhost:8080/api/auth/health to verify the API.","textChars":61,"textLines":1,"bbox":[90,437,1030,55]}
+{"kind":"textbox","id":"sh/9cv6hs7a","slide":7,"text":"Configuration","textPreview":"Configuration","textChars":13,"textLines":1,"bbox":[90,500,310,28]}
+{"kind":"textbox","id":"sh/obm5o7qp","slide":7,"text":"Use DB_URL, DB_USERNAME, DB_PASSWORD and JWT_SECRET for environment-specific configuration.","textPreview":"Use DB_URL, DB_USERNAME, DB_PASSWORD and JWT_SECRET for environment-specific configuration.","textChars":91,"textLines":1,"bbox":[90,532,1030,55]}
+{"kind":"notes","id":"nt/oizdyj","slide":7,"text":""}
+{"kind":"slide","id":"sl/wqha5z","slide":8,"title":"Production readiness","textShapes":9}
+{"kind":"textbox","id":"sh/2lcn61sf","slide":8,"text":"Production readiness","textPreview":"Production readiness","textChars":20,"textLines":1,"bbox":[70,48,1080,55]}
+{"kind":"shape","id":"sh/po3m1gbq","slide":8,"bbox":[70,118,120,6]}
+{"kind":"textbox","id":"sh/onu58ba5","slide":8,"text":"BloodConnect  |  08","textPreview":"BloodConnect  |  08","textChars":19,"textLines":1,"bbox":[1050,52,150,22]}
+{"kind":"textbox","id":"sh/fi14v6to","slide":8,"text":"Secrets and transport","textPreview":"Secrets and transport","textChars":21,"textLines":1,"bbox":[90,170,310,28]}
+{"kind":"textbox","id":"sh/exsn21s3","slide":8,"text":"Replace default JWT secrets, use HTTPS and restrict CORS to real deployment origins.","textPreview":"Replace default JWT secrets, use HTTPS and restrict CORS to real deployment origins.","textChars":84,"textLines":1,"bbox":[90,202,1030,55]}
+{"kind":"textbox","id":"sh/1k3mxgbu","slide":8,"text":"Testing","textPreview":"Testing","textChars":7,"textLines":1,"bbox":[90,285,310,28]}
+{"kind":"textbox","id":"sh/gju54ba9","slide":8,"text":"Cover registration, login, rejected tokens, request creation and donor matching with automated tests.","textPreview":"Cover registration, login, rejected tokens, request creation and donor matching with automated tests.","textChars":101,"textLines":1,"bbox":[90,317,1030,55]}
+{"kind":"textbox","id":"sh/ze5o7qts","slide":8,"text":"Scale and safety","textPreview":"Scale and safety","textChars":16,"textLines":1,"bbox":[90,400,310,28]}
+{"kind":"textbox","id":"sh/ytwnels7","slide":8,"text":"Use geospatial database querying for growth. Get clinical and legal approval for blood compatibility and donor eligibility rules.","textPreview":"Use geospatial database querying for growth. Get clinical and legal approval for blood compatibility and donor eligibility rules.","textChars":129,"textLines":1,"bbox":[90,432,1030,55]}
+{"kind":"textbox","id":"sh/o3uxw3q5","slide":8,"text":"Engineering foundation complete. Operational validation remains essential before real-world deployment.","textPreview":"Engineering foundation complete. Operational validation remains essential before real-world deployment.","textChars":103,"textLines":1,"bbox":[90,555,1070,33]}
+{"kind":"notes","id":"nt/wqha5z","slide":8,"text":""}

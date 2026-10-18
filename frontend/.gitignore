@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env.android
+.env.android.local
+android/.gradle/
+android/.idea/
+android/local.properties
+*.apk
+*.aab

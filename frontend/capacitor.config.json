@@ -1,0 +1,8 @@
+{
+  "appId": "com.bloodconnect.app",
+  "appName": "BloodConnect",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

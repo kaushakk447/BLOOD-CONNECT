@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: bloodconnect-api
+  
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/bloodconnect}
+    username: ${DB_USERNAME:bloodconnect_user}
+    password: ${DB_PASSWORD:bloodconnect_pass}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    show-sql: false
+  
+  flyway:
+    locations: classpath:db/migration
+    enabled: true
+  # NOTE: CORS is NOT configured here - "spring.web.cors.*" is not a real
+  # Spring Boot binding and would be silently ignored. Actual CORS config
+  # lives in SecurityConfig.java (corsConfigurationSource bean).
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+app:
+  cors:
+    allowed-origins: "${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,https://localhost}"
+  jwt:
+    secret: ${JWT_SECRET:your-super-secret-jwt-key-change-in-production-at-least-256-bits-long}
+    expiration: 3600000
+    refresh-expiration: 604800000
+
+logging:
+  level:
+    root: INFO
+    com.bloodconnect: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
