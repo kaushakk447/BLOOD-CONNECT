@@ -44,6 +44,7 @@ public class AdminService {
                 .email(u.getEmail())
                 .phone(u.getPhone())
                 .role(u.getRole().toString())
+                .smsNotificationsConsent(u.getSmsNotificationsConsent())
                 .build())
             .collect(Collectors.toList());
     }
@@ -56,11 +57,6 @@ public class AdminService {
         donorProfile.setVerificationStatus(
             verified ? DonorProfile.VerificationStatus.VERIFIED : DonorProfile.VerificationStatus.REJECTED
         );
-
-        // Verified donors default to available so they immediately enter matching
-        if (verified) {
-            donorProfile.setAvailabilityStatus(DonorProfile.AvailabilityStatus.AVAILABLE);
-        }
 
         donorProfile = donorProfileRepository.save(donorProfile);
 
@@ -94,6 +90,7 @@ public class AdminService {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .role(user.getRole().toString())
+                .smsNotificationsConsent(user.getSmsNotificationsConsent())
                 .build() : null)
             .build();
     }

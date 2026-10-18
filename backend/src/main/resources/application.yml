@@ -40,6 +40,14 @@ app:
     secret: ${JWT_SECRET:your-super-secret-jwt-key-change-in-production-at-least-256-bits-long}
     expiration: 3600000
     refresh-expiration: 604800000
+  sms:
+    # Defaults intentionally cannot send a real SMS. Enable only with explicit Render secrets.
+    enabled: ${SMS_ENABLED:false}
+    mock-mode: ${SMS_MOCK_MODE:true}
+    provider: ${SMS_PROVIDER:twilio}
+    account-sid: ${SMS_TWILIO_ACCOUNT_SID:}
+    auth-token: ${SMS_TWILIO_AUTH_TOKEN:}
+    from: ${SMS_TWILIO_FROM:}
 
 logging:
   level:

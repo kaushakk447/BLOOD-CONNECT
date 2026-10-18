@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notificationAPI } from '../services/api';
+import { useAuthStore } from '../stores/authStore';
 import { ArrowLeft, Droplet, CheckCircle, Shield, Bell } from '../components/icons';
 
 const ICONS = {
@@ -13,7 +14,9 @@ const ICONS = {
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingSmsConsent, setUpdatingSmsConsent] = useState(false);
   const navigate = useNavigate();
+  const { user, updateUser } = useAuthStore();
 
   useEffect(() => {
     loadNotifications();
@@ -48,6 +51,19 @@ function Notifications() {
     }
   };
 
+  const handleSmsConsent = async (event) => {
+    const consent = event.target.checked;
+    setUpdatingSmsConsent(true);
+    try {
+      const response = await notificationAPI.updateSmsConsent(consent);
+      updateUser(response.data);
+    } catch (error) {
+      console.error('Failed to update SMS consent:', error);
+    } finally {
+      setUpdatingSmsConsent(false);
+    }
+  };
+
   if (loading) return <div className="page"><div className="container"><p className="no-data">Loading...</p></div></div>;
 
   return (
@@ -67,6 +83,20 @@ function Notifications() {
       </div>
 
       <div className="container">
+        <div className="form-section">
+          <h3>SMS alerts</h3>
+          <div className="form-group checkbox">
+            <input
+              id="sms-consent"
+              type="checkbox"
+              checked={Boolean(user?.smsNotificationsConsent)}
+              onChange={handleSmsConsent}
+              disabled={updatingSmsConsent}
+            />
+            <label htmlFor="sms-consent">Receive transactional SMS alerts about blood-request matches and donor responses</label>
+          </div>
+        </div>
+
         {notifications.length > 0 ? (
           <div className="notifications-list">
             {notifications.map((notification) => {

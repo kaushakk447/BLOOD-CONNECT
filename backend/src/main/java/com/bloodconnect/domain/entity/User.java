@@ -57,6 +57,11 @@ public class User {
     @Builder.Default
     private Boolean phoneVerified = false;
 
+    /** Explicit, revocable consent for transactional SMS alerts. */
+    @Column(name = "sms_notifications_consent", nullable = false)
+    @Builder.Default
+    private Boolean smsNotificationsConsent = false;
+
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 

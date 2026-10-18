@@ -10,15 +10,17 @@ function DonorRegistration() {
     bloodGroup: 'O_POSITIVE',
     dateOfBirth: '',
     weightKg: '',
-    location: 'Chennai, Tamil Nadu',
-    latitude: 13.0827,
-    longitude: 80.2707,
+    location: '',
+    latitude: '',
+    longitude: '',
     lastDonationDate: '',
     allowLocationSharing: false,
     pushNotificationsEnabled: true,
+    availableForEmergencies: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [locating, setLocating] = useState(false);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
@@ -33,6 +35,10 @@ function DonorRegistration() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (formData.latitude === '' || formData.longitude === '') {
+      setError('Use your current location before saving so we can match nearby requests accurately.');
+      return;
+    }
     setLoading(true);
 
     try {
@@ -49,6 +55,26 @@ function DonorRegistration() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setError('Your browser does not support location. Please use a device or browser that does.');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setFormData((prev) => ({ ...prev, latitude: coords.latitude, longitude: coords.longitude }));
+        setError('');
+        setLocating(false);
+      },
+      () => {
+        setError('We could not access your location. Allow location access and try again.');
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
   };
 
   if (success) {
@@ -173,6 +199,10 @@ function DonorRegistration() {
                 required
               />
             </div>
+
+            <button type="button" className="btn btn-secondary" onClick={useCurrentLocation} disabled={locating}>
+              {locating ? 'Finding location…' : formData.latitude === '' ? 'Use current location for matching' : 'Location captured — update'}
+            </button>
           </div>
 
           <div className="info-box">
@@ -186,11 +216,21 @@ function DonorRegistration() {
             <div className="form-group checkbox">
               <input
                 type="checkbox"
+                name="availableForEmergencies"
+                checked={formData.availableForEmergencies}
+                onChange={handleChange}
+              />
+              <label>Available for emergencies — once your profile is verified, include me in compatible local matches</label>
+            </div>
+
+            <div className="form-group checkbox">
+              <input
+                type="checkbox"
                 name="allowLocationSharing"
                 checked={formData.allowLocationSharing}
                 onChange={handleChange}
               />
-              <label>Available for emergencies — allow hospitals to contact you directly for urgent local needs</label>
+              <label>Allow my approximate location to be used to find nearby requests</label>
             </div>
 
             <div className="form-group checkbox">

@@ -68,6 +68,7 @@ export const bloodRequestAPI = {
   getById: (id) => client.get(`/blood-requests/${id}`),
   getByUser: () => client.get('/blood-requests'),
   update: (id, data) => client.patch(`/blood-requests/${id}`, data),
+  retryMatching: (id) => client.post(`/blood-requests/${id}/match`),
 };
 
 // Donor API
@@ -87,6 +88,7 @@ export const notificationAPI = {
   getUnread: () => client.get('/notifications/unread'),
   markAsRead: (id) => client.patch(`/notifications/${id}/read`),
   markAllAsRead: () => client.patch('/notifications/read-all'),
+  updateSmsConsent: (consent) => client.patch('/notifications/sms-consent', { consent }),
 };
 
 // Admin API

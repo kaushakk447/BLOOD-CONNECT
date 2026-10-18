@@ -10,6 +10,7 @@ function Register() {
     phone: '',
     password: '',
     role: 'PATIENT',
+    smsNotificationsConsent: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -17,10 +18,10 @@ function Register() {
   const { register } = useAuthStore();
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -108,6 +109,16 @@ function Register() {
                 <option value="DONOR">Donor (Want to Help)</option>
                 <option value="HOSPITAL">Hospital</option>
               </select>
+            </div>
+
+            <div className="form-group checkbox">
+              <input
+                type="checkbox"
+                name="smsNotificationsConsent"
+                checked={formData.smsNotificationsConsent}
+                onChange={handleChange}
+              />
+              <label>Send me transactional SMS alerts about blood-request matches and responses. I can opt out later.</label>
             </div>
 
             <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>

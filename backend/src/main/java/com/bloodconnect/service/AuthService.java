@@ -51,6 +51,7 @@ public class AuthService {
             .verified(false)
             .emailVerified(false)
             .phoneVerified(false)
+            .smsNotificationsConsent(Boolean.TRUE.equals(request.getSmsNotificationsConsent()))
             .build();
         
         user = userRepository.save(user);
@@ -117,6 +118,7 @@ public class AuthService {
             .email(user.getEmail())
             .phone(user.getPhone())
             .role(user.getRole().name())
+            .smsNotificationsConsent(user.getSmsNotificationsConsent())
             .build();
     }
 }

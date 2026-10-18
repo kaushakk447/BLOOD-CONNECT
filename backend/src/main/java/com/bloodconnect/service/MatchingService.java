@@ -66,7 +66,11 @@ public class MatchingService {
         BigDecimal longitude,
         Integer radiusKm
     ) {
-        log.info("Finding nearby compatible donors for blood group: {}", bloodGroup);
+        if (bloodGroup == null || latitude == null || longitude == null || radiusKm == null || radiusKm <= 0) {
+            log.warn("Skipping donor matching because blood group, coordinates, or radius are invalid");
+            return Collections.emptyList();
+        }
+        log.info("Finding nearby compatible donors for blood group {} within {} km", bloodGroup, radiusKm);
         
         // Get compatible blood groups
         List<DonorProfile.BloodGroup> compatibleGroups = COMPATIBILITY_MAP.get(bloodGroup);
@@ -80,9 +84,10 @@ public class MatchingService {
             DonorProfile.VerificationStatus.VERIFIED,
             DonorProfile.AvailabilityStatus.AVAILABLE
         );
+        log.info("Matching candidates after blood group, verification, and availability filters: {}", donors.size());
         
         // Filter by distance and sort by proximity
-        return donors.stream()
+        List<DonorProfile> nearbyDonors = donors.stream()
             .filter(donor -> donor.getLatitude() != null && donor.getLongitude() != null)
             .filter(donor -> calculateDistance(latitude, longitude, donor.getLatitude(), donor.getLongitude()) <= radiusKm)
             .sorted((d1, d2) -> {
@@ -91,6 +96,8 @@ public class MatchingService {
                 return Double.compare(dist1, dist2);
             })
             .collect(Collectors.toList());
+        log.info("Matching candidates inside search radius: {}", nearbyDonors.size());
+        return nearbyDonors;
     }
     
     public List<DonorProfile.BloodGroup> getCompatibleBloodGroups(DonorProfile.BloodGroup bloodGroup) {

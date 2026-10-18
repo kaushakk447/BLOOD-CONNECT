@@ -9,8 +9,8 @@ function CreateBloodRequest() {
     unitsRequired: 2,
     urgency: 'HIGH',
     location: '',
-    latitude: 13.0827,
-    longitude: 80.2707, // Chennai default
+    latitude: '',
+    longitude: '',
     contactNumber: '',
     requiredDatetime: '',
     description: '',
@@ -18,6 +18,7 @@ function CreateBloodRequest() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [locating, setLocating] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -31,6 +32,10 @@ function CreateBloodRequest() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (formData.latitude === '' || formData.longitude === '') {
+      setError('Use your current location before sending so we can match nearby donors accurately.');
+      return;
+    }
     setLoading(true);
 
     try {
@@ -41,6 +46,26 @@ function CreateBloodRequest() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setError('Your browser does not support location. Please use a device or browser that does.');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setFormData((prev) => ({ ...prev, latitude: coords.latitude, longitude: coords.longitude }));
+        setError('');
+        setLocating(false);
+      },
+      () => {
+        setError('We could not access your location. Allow location access and try again.');
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
   };
 
   return (
@@ -114,6 +139,10 @@ function CreateBloodRequest() {
                 required
               />
             </div>
+
+            <button type="button" className="btn btn-secondary" onClick={useCurrentLocation} disabled={locating}>
+              {locating ? 'Finding location…' : formData.latitude === '' ? 'Use current location for matching' : 'Location captured — update'}
+            </button>
           </div>
 
           <div className="form-section">

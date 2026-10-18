@@ -22,7 +22,7 @@ function Home() {
 
   const loadRequests = async () => {
     try {
-      const response = await bloodRequestAPI.getAll();
+      const response = await bloodRequestAPI.getByUser();
       setActiveRequests(response.data);
     } catch (error) {
       console.error('Failed to load requests:', error);

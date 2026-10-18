@@ -58,7 +58,9 @@ public class DonorService {
             .allowLocationSharing(request.getAllowLocationSharing() != null ? request.getAllowLocationSharing() : false)
             .pushNotificationsEnabled(request.getPushNotificationsEnabled() != null ? request.getPushNotificationsEnabled() : true)
             .verificationStatus(DonorProfile.VerificationStatus.PENDING)
-            .availabilityStatus(DonorProfile.AvailabilityStatus.UNAVAILABLE)
+            .availabilityStatus(Boolean.TRUE.equals(request.getAvailableForEmergencies())
+                ? DonorProfile.AvailabilityStatus.AVAILABLE
+                : DonorProfile.AvailabilityStatus.UNAVAILABLE)
             .build();
         
         donorProfile = donorProfileRepository.save(donorProfile);
@@ -119,6 +121,9 @@ public class DonorService {
         );
         
         return donorRequests.stream()
+            .filter(dr -> bloodRequestRepository.findById(dr.getBloodRequestId())
+                .map(this::canReceiveResponse)
+                .orElse(false))
             .map(dr -> {
                 BloodRequest bloodRequest = bloodRequestRepository.findById(dr.getBloodRequestId())
                     .orElse(null);
@@ -139,6 +144,9 @@ public class DonorService {
         if (!donorRequest.getDonorId().equals(donorUserId)) {
             throw new ForbiddenException("Not authorized to accept this request");
         }
+        if (donorRequest.getStatus() != DonorRequest.Status.NOTIFIED) {
+            throw new BadRequestException("This donor request has already been responded to");
+        }
         
         donorRequest.setStatus(DonorRequest.Status.ACCEPTED);
         donorRequest.setRespondedAt(java.time.LocalDateTime.now());
@@ -147,15 +155,18 @@ public class DonorService {
         // Update blood request status
         BloodRequest bloodRequest = bloodRequestRepository.findById(donorRequest.getBloodRequestId())
             .orElseThrow(() -> new ResourceNotFoundException("Blood request not found"));
+        ensureRequestCanReceiveResponse(bloodRequest);
         
-        bloodRequest.setDonorCountResponded(bloodRequest.getDonorCountResponded() + 1);
+        bloodRequest.setDonorCountResponded((int) donorRequestRepository.countByBloodRequestIdAndStatusIn(
+            bloodRequest.getId(), List.of(DonorRequest.Status.ACCEPTED, DonorRequest.Status.DECLINED)
+        ));
         bloodRequest.setStatus(BloodRequest.Status.DONOR_RESPONDED);
         bloodRequestRepository.save(bloodRequest);
         
         // Notify requester
         User donor = userRepository.findById(donorUserId).orElse(null);
         if (donor != null) {
-            notificationService.notifyDonorResponse(bloodRequest.getRequesterId(), donorUserId, donor.getName(), true);
+            notificationService.notifyDonorResponse(bloodRequest.getRequesterId(), donorRequest.getId(), donor.getName(), true);
         }
         
         BloodRequest savedRequest = bloodRequestRepository.findById(donorRequest.getBloodRequestId()).orElse(null);
@@ -174,16 +185,28 @@ public class DonorService {
         if (!donorRequest.getDonorId().equals(donorUserId)) {
             throw new ForbiddenException("Not authorized to decline this request");
         }
+        if (donorRequest.getStatus() != DonorRequest.Status.NOTIFIED) {
+            throw new BadRequestException("This donor request has already been responded to");
+        }
         
         donorRequest.setStatus(DonorRequest.Status.DECLINED);
         donorRequest.setRespondedAt(java.time.LocalDateTime.now());
         donorRequest = donorRequestRepository.save(donorRequest);
+
+        BloodRequest respondedRequest = bloodRequestRepository.findById(donorRequest.getBloodRequestId())
+            .orElseThrow(() -> new ResourceNotFoundException("Blood request not found"));
+        ensureRequestCanReceiveResponse(respondedRequest);
+        respondedRequest.setDonorCountResponded((int) donorRequestRepository.countByBloodRequestIdAndStatusIn(
+            respondedRequest.getId(), List.of(DonorRequest.Status.ACCEPTED, DonorRequest.Status.DECLINED)
+        ));
+        respondedRequest.setStatus(BloodRequest.Status.DONOR_RESPONDED);
+        bloodRequestRepository.save(respondedRequest);
         
         // Notify requester
         User donor = userRepository.findById(donorUserId).orElse(null);
         BloodRequest bloodRequest = bloodRequestRepository.findById(donorRequest.getBloodRequestId()).orElse(null);
         if (donor != null && bloodRequest != null) {
-            notificationService.notifyDonorResponse(bloodRequest.getRequesterId(), donorUserId, donor.getName(), false);
+            notificationService.notifyDonorResponse(bloodRequest.getRequesterId(), donorRequest.getId(), donor.getName(), false);
         }
         
         BloodRequest savedRequest = bloodRequestRepository.findById(donorRequest.getBloodRequestId()).orElse(null);
@@ -214,6 +237,7 @@ public class DonorService {
                 .name(user.getName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
+                .smsNotificationsConsent(user.getSmsNotificationsConsent())
                 .build() : null)
             .build();
     }
@@ -244,8 +268,21 @@ public class DonorService {
                     .name(requester.getName())
                     .email(requester.getEmail())
                     .phone(requester.getPhone())
+                    .smsNotificationsConsent(requester.getSmsNotificationsConsent())
                     .build() : null)
                 .build() : null)
             .build();
+    }
+
+    private void ensureRequestCanReceiveResponse(BloodRequest bloodRequest) {
+        if (!canReceiveResponse(bloodRequest)) {
+            throw new BadRequestException("This blood request is no longer accepting donor responses");
+        }
+    }
+
+    private boolean canReceiveResponse(BloodRequest bloodRequest) {
+        return bloodRequest.getStatus() != BloodRequest.Status.CANCELLED
+            && bloodRequest.getStatus() != BloodRequest.Status.FULFILLED
+            && bloodRequest.getStatus() != BloodRequest.Status.EXPIRED;
     }
 }

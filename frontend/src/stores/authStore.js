@@ -53,6 +53,11 @@ export const useAuthStore = create((set) => ({
     set({ user: null, accessToken: null, refreshToken: null });
   },
 
+  updateUser: (user) => {
+    localStorage.setItem('user', JSON.stringify(user));
+    set({ user });
+  },
+
   hydrate: () => {
     const user = localStorage.getItem('user');
     const accessToken = localStorage.getItem('accessToken');

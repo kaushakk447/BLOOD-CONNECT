@@ -1,6 +1,8 @@
 package com.bloodconnect.api.controller;
 
 import com.bloodconnect.api.dto.NotificationResponse;
+import com.bloodconnect.api.dto.UpdateSmsConsentDTO;
+import com.bloodconnect.api.dto.UserResponse;
 import com.bloodconnect.service.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -53,5 +55,13 @@ public class NotificationController {
         Long userId = (Long) httpRequest.getAttribute("userId");
         notificationService.markAllAsRead(userId);
         return ResponseEntity.ok(Map.of("success", true, "message", "All notifications marked as read"));
+    }
+
+    @PatchMapping("/sms-consent")
+    public ResponseEntity<UserResponse> updateSmsConsent(
+        @jakarta.validation.Valid @RequestBody UpdateSmsConsentDTO request,
+        HttpServletRequest httpRequest) {
+        Long userId = (Long) httpRequest.getAttribute("userId");
+        return ResponseEntity.ok(notificationService.updateSmsConsent(userId, request.getConsent()));
     }
 }

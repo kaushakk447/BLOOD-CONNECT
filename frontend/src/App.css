@@ -1,18 +1,18 @@
 :root {
-  --coral: #E8776C;
-  --coral-dark: #D45C50;
-  --coral-light: #FDECEA;
-  --coral-lighter: #FFF6F5;
-  --ink: #1F2430;
-  --ink-soft: #4B5162;
-  --muted: #8A8F9C;
-  --border: #EAEAEF;
-  --bg: #F7F7FA;
-  --card: #FFFFFF;
-  --success: #1EA672;
-  --success-bg: #E9F9F1;
-  --info: #2F80ED;
-  --info-bg: #EAF2FE;
+  --coral: #8E3040;
+  --coral-dark: #702332;
+  --coral-light: #F3D8DA;
+  --coral-lighter: #FFF8F3;
+  --ink: #342B2A;
+  --ink-soft: #5E504D;
+  --muted: #766966;
+  --border: rgba(142, 48, 64, .14);
+  --bg: #F7F1E7;
+  --card: rgba(255, 252, 246, .78);
+  --success: #49785C;
+  --success-bg: #E5F0E7;
+  --info: #8E3040;
+  --info-bg: #F7E9DF;
   --warning: #D98A1F;
   --warning-bg: #FEF3E2;
   --radius-sm: 10px;
@@ -35,7 +35,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: var(--bg);
+  background: radial-gradient(circle at 0 0, #fffdf8 0, transparent 32rem), radial-gradient(circle at 100% 15%, #efe0d2 0, transparent 34rem), var(--bg);
   color: var(--ink);
 }
 
@@ -234,6 +234,7 @@ button { font-family: inherit; }
   padding: 18px;
   margin-bottom: 16px;
   box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(16px);
 }
 
 .form-section h3 {
@@ -460,6 +461,7 @@ button { font-family: inherit; }
   padding: 16px;
   margin-bottom: 12px;
   box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(16px);
   cursor: pointer;
   transition: box-shadow .15s, transform .15s;
   display: flex;
@@ -483,6 +485,7 @@ button { font-family: inherit; }
   padding: 22px;
   margin-bottom: 18px;
   box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
 }
 
 .request-header {
@@ -905,6 +908,14 @@ button { font-family: inherit; }
   border-radius: var(--radius-lg);
   padding: 28px 24px;
   box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.empty-state { align-items: center; justify-content: center; text-align: center; gap: 12px; }
+.empty-state .no-data { padding: 0 0 10px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
 
 .header {

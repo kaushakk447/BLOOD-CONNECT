@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,6 +50,7 @@ public class BloodRequestService {
         User requester = userRepository.findById(requesterId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         
+        validateCreateRequest(request);
         BloodRequest bloodRequest = BloodRequest.builder()
             .requesterId(requesterId)
             .bloodGroup(BloodRequest.BloodGroup.valueOf(request.getBloodGroup().toUpperCase()))
@@ -61,7 +64,7 @@ public class BloodRequestService {
             .hospitalId(request.getHospitalId())
             .description(request.getDescription())
             .searchRadiusKm(request.getSearchRadiusKm() != null ? request.getSearchRadiusKm() : 50)
-            .status(BloodRequest.Status.OPEN)
+            .status(BloodRequest.Status.SEARCHING)
             .build();
         
         bloodRequest = bloodRequestRepository.save(bloodRequest);
@@ -78,7 +81,11 @@ public class BloodRequestService {
     public void matchAndNotifyDonors(BloodRequest bloodRequest) {
         log.info("Starting donor matching for blood request: {}", bloodRequest.getId());
         
-        // Update status to SEARCHING
+        if (isTerminal(bloodRequest.getStatus())) {
+            log.info("Skipping matching for terminal blood request {}", bloodRequest.getId());
+            return;
+        }
+        // SEARCHING remains non-terminal when there are no eligible donors.
         bloodRequest.setStatus(BloodRequest.Status.SEARCHING);
         bloodRequestRepository.save(bloodRequest);
         
@@ -109,6 +116,10 @@ public class BloodRequestService {
         
         // Create donor requests and send notifications
         for (DonorProfile donorProfile : nearbyDonors) {
+            if (donorRequestRepository.findByBloodRequestIdAndDonorId(bloodRequest.getId(), donorProfile.getUserId()).isPresent()) {
+                log.debug("Donor {} was already notified for request {}", donorProfile.getUserId(), bloodRequest.getId());
+                continue;
+            }
             // Calculate distance
             double distance = matchingService.calculateDistance(
                 bloodRequest.getLatitude(),
@@ -136,8 +147,10 @@ public class BloodRequestService {
         }
         
         // Update blood request with donor notification count
-        bloodRequest.setDonorCountNotified(nearbyDonors.size());
-        bloodRequest.setStatus(BloodRequest.Status.DONORS_NOTIFIED);
+        syncDonorCounters(bloodRequest);
+        if (bloodRequest.getDonorCountNotified() > 0) {
+            bloodRequest.setStatus(BloodRequest.Status.DONORS_NOTIFIED);
+        }
         bloodRequestRepository.save(bloodRequest);
     }
     
@@ -146,6 +159,10 @@ public class BloodRequestService {
         BloodRequest bloodRequest = bloodRequestRepository.findById(requestId)
             .orElseThrow(() -> new ResourceNotFoundException("Blood request not found"));
         
+        if (!bloodRequest.getRequesterId().equals(userId)
+            && donorRequestRepository.findByBloodRequestIdAndDonorId(requestId, userId).isEmpty()) {
+            throw new com.bloodconnect.exception.ForbiddenException("Not authorized to view this blood request");
+        }
         User requester = userRepository.findById(bloodRequest.getRequesterId())
             .orElseThrow(() -> new ResourceNotFoundException("Requester not found"));
         
@@ -166,7 +183,11 @@ public class BloodRequestService {
     
     @Transactional(readOnly = true)
     public List<BloodRequestResponse> getAllBloodRequests() {
-        List<BloodRequest> requests = bloodRequestRepository.findByStatus(BloodRequest.Status.OPEN);
+        List<BloodRequest> requests = bloodRequestRepository.findByStatusIn(Arrays.asList(
+            BloodRequest.Status.OPEN, BloodRequest.Status.SEARCHING,
+            BloodRequest.Status.DONORS_NOTIFIED, BloodRequest.Status.DONOR_RESPONDED,
+            BloodRequest.Status.CONNECTED
+        ));
         
         return requests.stream()
             .map(br -> {
@@ -182,13 +203,22 @@ public class BloodRequestService {
             .orElseThrow(() -> new ResourceNotFoundException("Blood request not found"));
         
         if (request.getStatus() != null) {
-            bloodRequest.setStatus(BloodRequest.Status.valueOf(request.getStatus().toUpperCase()));
+            if (!"CANCELLED".equalsIgnoreCase(request.getStatus())) {
+                throw new BadRequestException("Only cancellation can be requested directly");
+            }
+            if (isTerminal(bloodRequest.getStatus())) {
+                throw new BadRequestException("A terminal request cannot be changed");
+            }
+            bloodRequest.setStatus(BloodRequest.Status.CANCELLED);
         }
         
         if (request.getUnitsFulfilled() != null) {
             bloodRequest.setUnitsFulfilled(request.getUnitsFulfilled());
         }
         
+        if (request.getUnitsFulfilled() != null && request.getUnitsFulfilled() < 0) {
+            throw new BadRequestException("Units fulfilled cannot be negative");
+        }
         if (bloodRequest.getUnitsFulfilled() >= bloodRequest.getUnitsRequired()) {
             bloodRequest.setStatus(BloodRequest.Status.FULFILLED);
         }
@@ -197,6 +227,52 @@ public class BloodRequestService {
         
         User requester = userRepository.findById(userId).orElse(null);
         return mapBloodRequestToResponse(bloodRequest, requester);
+    }
+
+    @Transactional
+    public BloodRequestResponse retryMatching(Long requestId, Long userId) {
+        BloodRequest bloodRequest = bloodRequestRepository.findByIdAndRequesterId(requestId, userId)
+            .orElseThrow(() -> new ResourceNotFoundException("Blood request not found"));
+        if (isTerminal(bloodRequest.getStatus())) {
+            throw new BadRequestException("A terminal request cannot be matched again");
+        }
+        if (bloodRequest.getStatus() == BloodRequest.Status.DONOR_RESPONDED
+            || bloodRequest.getStatus() == BloodRequest.Status.CONNECTED) {
+            throw new BadRequestException("A request with donor responses cannot be matched again");
+        }
+        matchAndNotifyDonors(bloodRequest);
+        User requester = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return mapBloodRequestToResponse(bloodRequest, requester);
+    }
+
+    private void validateCreateRequest(CreateBloodRequestDTO request) {
+        if (request.getRequiredDatetime().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Required date and time must be in the future");
+        }
+        if (request.getSearchRadiusKm() != null && request.getSearchRadiusKm() <= 0) {
+            throw new BadRequestException("Search radius must be greater than zero");
+        }
+        if (request.getLatitude().abs().compareTo(new BigDecimal("90")) > 0
+            || request.getLongitude().abs().compareTo(new BigDecimal("180")) > 0) {
+            throw new BadRequestException("Location coordinates are invalid");
+        }
+        try {
+            BloodRequest.BloodGroup.valueOf(request.getBloodGroup().trim().toUpperCase());
+            BloodRequest.Urgency.valueOf(request.getUrgency().trim().toUpperCase());
+        } catch (IllegalArgumentException exception) {
+            throw new BadRequestException("Invalid blood group or urgency");
+        }
+    }
+
+    private void syncDonorCounters(BloodRequest bloodRequest) {
+        bloodRequest.setDonorCountNotified((int) donorRequestRepository.countByBloodRequestId(bloodRequest.getId()));
+        bloodRequest.setDonorCountResponded((int) donorRequestRepository.countByBloodRequestIdAndStatusIn(
+            bloodRequest.getId(), Arrays.asList(DonorRequest.Status.ACCEPTED, DonorRequest.Status.DECLINED)
+        ));
+    }
+
+    private boolean isTerminal(BloodRequest.Status status) {
+        return status == BloodRequest.Status.FULFILLED || status == BloodRequest.Status.CANCELLED || status == BloodRequest.Status.EXPIRED;
     }
     
     private BloodRequestResponse mapBloodRequestToResponse(BloodRequest bloodRequest, User requester) {
@@ -222,6 +298,7 @@ public class BloodRequestService {
                 .name(requester.getName())
                 .email(requester.getEmail())
                 .phone(requester.getPhone())
+                .smsNotificationsConsent(requester.getSmsNotificationsConsent())
                 .build() : null)
             .build();
     }

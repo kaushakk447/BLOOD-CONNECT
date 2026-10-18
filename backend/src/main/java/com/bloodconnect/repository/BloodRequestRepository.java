@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface BloodRequestRepository extends JpaRepository<BloodRequest, Long> {
     List<BloodRequest> findByRequesterId(Long requesterId);
     List<BloodRequest> findByStatus(BloodRequest.Status status);
+    List<BloodRequest> findByStatusIn(List<BloodRequest.Status> statuses);
     List<BloodRequest> findByStatusAndCreatedAtAfter(BloodRequest.Status status, LocalDateTime createdAfter);
     Optional<BloodRequest> findByIdAndRequesterId(Long id, Long requesterId);
 }

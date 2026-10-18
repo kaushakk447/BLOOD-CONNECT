@@ -13,4 +13,6 @@ public interface DonorRequestRepository extends JpaRepository<DonorRequest, Long
     List<DonorRequest> findByDonorIdAndStatus(Long donorId, DonorRequest.Status status);
     Optional<DonorRequest> findByBloodRequestIdAndDonorId(Long requestId, Long donorId);
     List<DonorRequest> findByBloodRequestIdAndStatus(Long requestId, DonorRequest.Status status);
+    long countByBloodRequestId(Long requestId);
+    long countByBloodRequestIdAndStatusIn(Long requestId, List<DonorRequest.Status> statuses);
 }

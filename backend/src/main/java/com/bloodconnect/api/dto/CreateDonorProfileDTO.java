@@ -37,4 +37,5 @@ public class CreateDonorProfileDTO {
     private LocalDate lastDonationDate;
     private Boolean allowLocationSharing;
     private Boolean pushNotificationsEnabled;
+    private Boolean availableForEmergencies;
 }

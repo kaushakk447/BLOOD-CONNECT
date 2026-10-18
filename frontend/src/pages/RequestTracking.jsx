@@ -13,12 +13,36 @@ function RequestTracking() {
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notFound, setNotFound] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
-    loadRequest();
-    const interval = setInterval(loadRequest, 5000); // Poll every 5 seconds
-    return () => clearInterval(interval);
+    let active = true;
+    let interval;
+    const refresh = async () => {
+      try {
+        const response = await bloodRequestAPI.getById(id);
+        if (!active) return;
+        setRequest(response.data);
+        setError('');
+        setNotFound(false);
+        if (!['FULFILLED', 'CANCELLED', 'EXPIRED'].includes(response.data.status)) {
+          interval = setTimeout(refresh, 10000);
+        }
+      } catch (err) {
+        if (!active) return;
+        setNotFound(err.response?.status === 404);
+        setError(err.response?.status === 404 ? 'This request could not be found.' : 'We could not refresh this request right now.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    refresh();
+    return () => {
+      active = false;
+      clearTimeout(interval);
+    };
   }, [id]);
 
   const loadRequest = async () => {
@@ -26,11 +50,25 @@ function RequestTracking() {
       const response = await bloodRequestAPI.getById(id);
       setRequest(response.data);
       setError('');
+      setNotFound(false);
     } catch (err) {
-      setError('Failed to load request');
+      setNotFound(err.response?.status === 404);
+      setError(err.response?.status === 404 ? 'This request could not be found.' : 'We could not refresh this request right now.');
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRetryMatching = async () => {
+    setRetrying(true);
+    try {
+      await bloodRequestAPI.retryMatching(id);
+      await loadRequest();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Matching could not be retried right now.');
+    } finally {
+      setRetrying(false);
     }
   };
 
@@ -51,7 +89,12 @@ function RequestTracking() {
   if (!request)
     return (
       <div className="page">
-        <div className="container"><p className="no-data">{error || 'Request not found'}</p></div>
+        <div className="container empty-state">
+          <h2>{notFound ? 'Request not found' : 'Unable to load request'}</h2>
+          <p className="no-data">{error || 'This request is unavailable.'}</p>
+          {!notFound && <button className="btn btn-primary" onClick={loadRequest}>Retry</button>}
+          <button className="btn btn-secondary" onClick={() => navigate('/')}>Back to Requests</button>
+        </div>
       </div>
     );
 
@@ -85,6 +128,8 @@ function RequestTracking() {
         <span className="urgent-banner"><span className="pulse-dot" />{request.urgency} Request</span>
         <h2 className="tracking-title">Searching for {bloodLabel(request.bloodGroup)}</h2>
         <p className="tracking-subtitle"><MapPin size={14} /> {request.location}</p>
+
+        {error && <div className="error-message">{error}</div>}
 
         <div className="stats-section" style={{ marginTop: 18 }}>
           <div className="stat-card">
@@ -167,16 +212,22 @@ function RequestTracking() {
             {request.status === 'DONORS_NOTIFIED' &&
               'Donors have been notified. Waiting for responses...'}
             {request.status === 'DONOR_RESPONDED' &&
-              'A donor has accepted your request!'}
+              'A donor has responded. Check notifications for the response details.'}
             {request.status === 'FULFILLED' && 'Your blood request is fulfilled!'}
             {request.status === 'CANCELLED' && 'Request cancelled.'}
-            {request.status === 'EXPIRED' && 'Request expired - no donors available.'}
+            {request.status === 'EXPIRED' && 'Request expired.'}
           </p>
         </div>
 
         <button className="btn btn-secondary btn-block" onClick={loadRequest} style={{ marginBottom: isCancellable ? 14 : 0 }}>
           <RefreshCw size={16} /> Refresh Status
         </button>
+
+        {request.status === 'SEARCHING' && (
+          <button className="btn btn-outline btn-block" onClick={handleRetryMatching} disabled={retrying} style={{ marginBottom: 14 }}>
+            <RefreshCw size={16} /> {retrying ? 'Retrying match…' : 'Retry donor matching'}
+          </button>
+        )}
 
         {isCancellable && (
           <div style={{ textAlign: 'center' }}>

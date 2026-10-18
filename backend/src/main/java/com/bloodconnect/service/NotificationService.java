@@ -1,9 +1,12 @@
 package com.bloodconnect.service;
 
 import com.bloodconnect.api.dto.NotificationResponse;
+import com.bloodconnect.api.dto.UserResponse;
 import com.bloodconnect.domain.entity.BloodRequest;
 import com.bloodconnect.domain.entity.Notification;
 import com.bloodconnect.repository.NotificationRepository;
+import com.bloodconnect.repository.UserRepository;
+import com.bloodconnect.domain.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +20,12 @@ public class NotificationService {
     
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private SmsNotificationService smsNotificationService;
     
     @Transactional
     public void notifyDonor(Long donorUserId, BloodRequest bloodRequest, double distance) {
@@ -44,6 +53,7 @@ public class NotificationService {
             .build();
         
         notificationRepository.save(notification);
+        smsNotificationService.notifyDonorMatch(donorUserId, bloodRequest.getId());
     }
     
     @Transactional
@@ -67,7 +77,7 @@ public class NotificationService {
     }
     
     @Transactional
-    public void notifyDonorResponse(Long requesterId, Long donorId, String donorName, boolean accepted) {
+    public void notifyDonorResponse(Long requesterId, Long donorRequestId, String donorName, boolean accepted) {
         log.info("Notifying requester of donor response: {}", requesterId);
         
         String title = accepted ? "Donor Accepted Your Request" : "Donor Declined Your Request";
@@ -82,6 +92,7 @@ public class NotificationService {
             .build();
         
         notificationRepository.save(notification);
+        smsNotificationService.notifyDonorResponse(requesterId, donorRequestId, accepted);
     }
     
     @Transactional(readOnly = true)
@@ -126,6 +137,22 @@ public class NotificationService {
             n.setReadAt(java.time.LocalDateTime.now());
         });
         notificationRepository.saveAll(unreadNotifications);
+    }
+
+    @Transactional
+    public UserResponse updateSmsConsent(Long userId, boolean consent) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new com.bloodconnect.exception.ResourceNotFoundException("User not found"));
+        user.setSmsNotificationsConsent(consent);
+        user = userRepository.save(user);
+        return UserResponse.builder()
+            .id(user.getId())
+            .name(user.getName())
+            .email(user.getEmail())
+            .phone(user.getPhone())
+            .role(user.getRole().name())
+            .smsNotificationsConsent(user.getSmsNotificationsConsent())
+            .build();
     }
     
     private NotificationResponse mapNotificationToResponse(Notification notification) {

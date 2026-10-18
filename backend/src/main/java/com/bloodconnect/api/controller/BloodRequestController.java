@@ -52,6 +52,7 @@ public class BloodRequestController {
     }
     
     @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<BloodRequestResponse>> getAllBloodRequests() {
         List<BloodRequestResponse> response = bloodRequestService.getAllBloodRequests();
         return ResponseEntity.ok(response);
@@ -66,5 +67,11 @@ public class BloodRequestController {
         Long userId = (Long) httpRequest.getAttribute("userId");
         BloodRequestResponse response = bloodRequestService.updateBloodRequest(id, request, userId);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/match")
+    public ResponseEntity<BloodRequestResponse> retryMatching(@PathVariable Long id, HttpServletRequest httpRequest) {
+        Long userId = (Long) httpRequest.getAttribute("userId");
+        return ResponseEntity.ok(bloodRequestService.retryMatching(id, userId));
     }
 }
