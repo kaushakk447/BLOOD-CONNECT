@@ -34,12 +34,11 @@ public class NotificationService {
         String title = "Emergency Blood Request";
         String message = String.format(
             "A patient urgently needs %s blood at %s (%.1f km away). "
-            + "%d units required. Contact: %s",
+            + "%d units required. Accept the request to view their contact details.",
             bloodRequest.getBloodGroup(),
             bloodRequest.getLocation(),
             distance,
-            bloodRequest.getUnitsRequired(),
-            bloodRequest.getContactNumber()
+            bloodRequest.getUnitsRequired()
         );
         
         Notification notification = Notification.builder()
@@ -77,11 +76,14 @@ public class NotificationService {
     }
     
     @Transactional
-    public void notifyDonorResponse(Long requesterId, Long donorRequestId, String donorName, boolean accepted) {
+    public void notifyDonorResponse(Long requesterId, Long donorRequestId, User donor, boolean accepted) {
         log.info("Notifying requester of donor response: {}", requesterId);
         
         String title = accepted ? "Donor Accepted Your Request" : "Donor Declined Your Request";
-        String message = String.format("%s %s your blood request.", donorName, accepted ? "accepted" : "declined");
+        String message = String.format("%s %s your blood request.", donor.getName(), accepted ? "accepted" : "declined");
+        if (accepted && donor.getPhone() != null && !donor.getPhone().isBlank()) {
+            message += " You can contact the donor at " + donor.getPhone() + ".";
+        }
         
         Notification notification = Notification.builder()
             .userId(requesterId)

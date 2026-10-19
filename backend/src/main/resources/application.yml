@@ -35,7 +35,7 @@ server:
 
 app:
   cors:
-    allowed-origins: "${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,https://localhost}"
+    allowed-origins: "${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,https://blood-connect-mwix.onrender.com}"
   jwt:
     secret: ${JWT_SECRET:your-super-secret-jwt-key-change-in-production-at-least-256-bits-long}
     expiration: 3600000
@@ -45,9 +45,11 @@ app:
     enabled: ${SMS_ENABLED:false}
     mock-mode: ${SMS_MOCK_MODE:true}
     provider: ${SMS_PROVIDER:twilio}
-    account-sid: ${SMS_TWILIO_ACCOUNT_SID:}
-    auth-token: ${SMS_TWILIO_AUTH_TOKEN:}
-    from: ${SMS_TWILIO_FROM:}
+    # Keep provider credentials server-side. These names match the Render
+    # environment variables documented for this application.
+    account-sid: ${TWILIO_ACCOUNT_SID:}
+    auth-token: ${TWILIO_AUTH_TOKEN:}
+    from: ${TWILIO_FROM_NUMBER:}
 
 logging:
   level:

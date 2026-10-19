@@ -66,7 +66,6 @@ public class SmsNotificationService {
         }
         if (properties.isMockMode()) {
             delivery.setStatus(SmsDelivery.Status.MOCKED);
-            delivery.setProviderMessageId("mock-" + delivery.getId());
             delivery.setSentAt(LocalDateTime.now());
             delivery.setAttemptCount(1);
             smsDeliveryRepository.save(delivery);
@@ -75,7 +74,9 @@ public class SmsNotificationService {
 
         try {
             delivery.setAttemptCount(1);
-            delivery.setProviderMessageId(twilioSmsProviderClient.send(recipient.getPhone(), body));
+            TwilioSmsProviderClient.ProviderResponse providerResponse = twilioSmsProviderClient.send(recipient.getPhone(), body);
+            delivery.setProviderMessageId(providerResponse.messageSid());
+            delivery.setProviderStatus(providerResponse.status());
             delivery.setStatus(SmsDelivery.Status.SENT);
             delivery.setSentAt(LocalDateTime.now());
         } catch (RuntimeException exception) {

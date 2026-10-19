@@ -92,13 +92,13 @@ class WorkflowServiceTest {
         when(bloodRequestRepository.findById(100L)).thenReturn(Optional.of(persisted));
         assertEquals(1, donorService.getPendingDonorRequests(2L).size());
 
-        when(donorRequestRepository.findById(200L)).thenReturn(Optional.of(donorRequest));
+        when(donorRequestRepository.findByIdForUpdate(200L)).thenReturn(Optional.of(donorRequest));
         when(donorRequestRepository.countByBloodRequestIdAndStatusIn(eq(100L), anyList())).thenReturn(1L);
         donorService.acceptDonorRequest(200L, 2L);
 
         assertEquals(DonorRequest.Status.ACCEPTED, donorRequest.getStatus());
         assertEquals(BloodRequest.Status.DONOR_RESPONDED, persisted.getStatus());
-        verify(notificationService).notifyDonorResponse(1L, 200L, "Donor", true);
+        verify(notificationService).notifyDonorResponse(1L, 200L, donor, true);
         assertEquals("DONOR_RESPONDED", bloodRequestService.getBloodRequestById(100L, 1L).getStatus());
     }
 

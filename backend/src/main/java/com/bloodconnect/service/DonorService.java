@@ -88,9 +88,13 @@ public class DonorService {
         DonorProfile donorProfile = donorProfileRepository.findByUserId(userId)
             .orElseThrow(() -> new ResourceNotFoundException("Donor profile not found"));
         
-        donorProfile.setAvailabilityStatus(
-            DonorProfile.AvailabilityStatus.valueOf(request.getAvailabilityStatus().toUpperCase())
-        );
+        try {
+            donorProfile.setAvailabilityStatus(
+                DonorProfile.AvailabilityStatus.valueOf(request.getAvailabilityStatus().trim().toUpperCase())
+            );
+        } catch (IllegalArgumentException exception) {
+            throw new BadRequestException("Availability status must be AVAILABLE or UNAVAILABLE");
+        }
         
         donorProfile = donorProfileRepository.save(donorProfile);
         
@@ -138,7 +142,7 @@ public class DonorService {
     public DonorRequestResponse acceptDonorRequest(Long donorRequestId, Long donorUserId) {
         log.info("Donor {} accepting request: {}", donorUserId, donorRequestId);
         
-        DonorRequest donorRequest = donorRequestRepository.findById(donorRequestId)
+        DonorRequest donorRequest = donorRequestRepository.findByIdForUpdate(donorRequestId)
             .orElseThrow(() -> new ResourceNotFoundException("Donor request not found"));
         
         if (!donorRequest.getDonorId().equals(donorUserId)) {
@@ -148,14 +152,15 @@ public class DonorService {
             throw new BadRequestException("This donor request has already been responded to");
         }
         
-        donorRequest.setStatus(DonorRequest.Status.ACCEPTED);
-        donorRequest.setRespondedAt(java.time.LocalDateTime.now());
-        donorRequest = donorRequestRepository.save(donorRequest);
-        
-        // Update blood request status
+        // Validate the request before persisting the donor response. This keeps
+        // a stale cancellation or expiry from ever being recorded as accepted.
         BloodRequest bloodRequest = bloodRequestRepository.findById(donorRequest.getBloodRequestId())
             .orElseThrow(() -> new ResourceNotFoundException("Blood request not found"));
         ensureRequestCanReceiveResponse(bloodRequest);
+
+        donorRequest.setStatus(DonorRequest.Status.ACCEPTED);
+        donorRequest.setRespondedAt(java.time.LocalDateTime.now());
+        donorRequest = donorRequestRepository.save(donorRequest);
         
         bloodRequest.setDonorCountResponded((int) donorRequestRepository.countByBloodRequestIdAndStatusIn(
             bloodRequest.getId(), List.of(DonorRequest.Status.ACCEPTED, DonorRequest.Status.DECLINED)
@@ -166,7 +171,7 @@ public class DonorService {
         // Notify requester
         User donor = userRepository.findById(donorUserId).orElse(null);
         if (donor != null) {
-            notificationService.notifyDonorResponse(bloodRequest.getRequesterId(), donorRequest.getId(), donor.getName(), true);
+            notificationService.notifyDonorResponse(bloodRequest.getRequesterId(), donorRequest.getId(), donor, true);
         }
         
         BloodRequest savedRequest = bloodRequestRepository.findById(donorRequest.getBloodRequestId()).orElse(null);
@@ -179,7 +184,7 @@ public class DonorService {
     public DonorRequestResponse declineDonorRequest(Long donorRequestId, Long donorUserId) {
         log.info("Donor {} declining request: {}", donorUserId, donorRequestId);
         
-        DonorRequest donorRequest = donorRequestRepository.findById(donorRequestId)
+        DonorRequest donorRequest = donorRequestRepository.findByIdForUpdate(donorRequestId)
             .orElseThrow(() -> new ResourceNotFoundException("Donor request not found"));
         
         if (!donorRequest.getDonorId().equals(donorUserId)) {
@@ -189,13 +194,14 @@ public class DonorService {
             throw new BadRequestException("This donor request has already been responded to");
         }
         
-        donorRequest.setStatus(DonorRequest.Status.DECLINED);
-        donorRequest.setRespondedAt(java.time.LocalDateTime.now());
-        donorRequest = donorRequestRepository.save(donorRequest);
-
+        // Validate before persisting for the same reason as acceptance.
         BloodRequest respondedRequest = bloodRequestRepository.findById(donorRequest.getBloodRequestId())
             .orElseThrow(() -> new ResourceNotFoundException("Blood request not found"));
         ensureRequestCanReceiveResponse(respondedRequest);
+
+        donorRequest.setStatus(DonorRequest.Status.DECLINED);
+        donorRequest.setRespondedAt(java.time.LocalDateTime.now());
+        donorRequest = donorRequestRepository.save(donorRequest);
         respondedRequest.setDonorCountResponded((int) donorRequestRepository.countByBloodRequestIdAndStatusIn(
             respondedRequest.getId(), List.of(DonorRequest.Status.ACCEPTED, DonorRequest.Status.DECLINED)
         ));
@@ -206,7 +212,7 @@ public class DonorService {
         User donor = userRepository.findById(donorUserId).orElse(null);
         BloodRequest bloodRequest = bloodRequestRepository.findById(donorRequest.getBloodRequestId()).orElse(null);
         if (donor != null && bloodRequest != null) {
-            notificationService.notifyDonorResponse(bloodRequest.getRequesterId(), donorRequest.getId(), donor.getName(), false);
+            notificationService.notifyDonorResponse(bloodRequest.getRequesterId(), donorRequest.getId(), donor, false);
         }
         
         BloodRequest savedRequest = bloodRequestRepository.findById(donorRequest.getBloodRequestId()).orElse(null);
@@ -260,7 +266,7 @@ public class DonorService {
                 .location(bloodRequest.getLocation())
                 .latitude(bloodRequest.getLatitude())
                 .longitude(bloodRequest.getLongitude())
-                .contactNumber(bloodRequest.getContactNumber())
+                .contactNumber(canViewRequesterContact(donorRequest) ? bloodRequest.getContactNumber() : null)
                 .requiredDatetime(bloodRequest.getRequiredDatetime())
                 .createdAt(bloodRequest.getCreatedAt())
                 .requester(requester != null ? UserResponse.builder()
@@ -284,5 +290,11 @@ public class DonorService {
         return bloodRequest.getStatus() != BloodRequest.Status.CANCELLED
             && bloodRequest.getStatus() != BloodRequest.Status.FULFILLED
             && bloodRequest.getStatus() != BloodRequest.Status.EXPIRED;
+    }
+
+    private boolean canViewRequesterContact(DonorRequest donorRequest) {
+        return donorRequest.getStatus() == DonorRequest.Status.ACCEPTED
+            || donorRequest.getStatus() == DonorRequest.Status.CONNECTED
+            || donorRequest.getStatus() == DonorRequest.Status.COMPLETED;
     }
 }

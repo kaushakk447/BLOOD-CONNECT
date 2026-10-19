@@ -46,6 +46,9 @@ public class SmsDelivery {
     @Column(name = "provider_message_id")
     private String providerMessageId;
 
+    @Column(name = "provider_status")
+    private String providerStatus;
+
     @Column(name = "error_message", length = 1000)
     private String errorMessage;
 

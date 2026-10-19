@@ -66,4 +66,63 @@ class SmsNotificationServiceTest {
         verify(deliveries, never()).save(any());
         verifyNoInteractions(users, twilio);
     }
+
+    @Test
+    void disabledSmsIsPersistedAsSkippedWithoutCallingProvider() {
+        SmsProperties properties = new SmsProperties();
+        properties.setEnabled(false);
+        properties.setMockMode(false);
+        service = new SmsNotificationService(deliveries, users, properties, twilio);
+        when(deliveries.existsByIdempotencyKey(anyString())).thenReturn(false);
+        when(users.findById(2L)).thenReturn(Optional.of(User.builder().id(2L).phone("+919999999999")
+            .smsNotificationsConsent(true).build()));
+
+        service.notifyDonorMatch(2L, 10L);
+
+        ArgumentCaptor<SmsDelivery> delivery = ArgumentCaptor.forClass(SmsDelivery.class);
+        verify(deliveries, times(2)).save(delivery.capture());
+        assertEquals(SmsDelivery.Status.SKIPPED, delivery.getAllValues().get(1).getStatus());
+        verifyNoInteractions(twilio);
+    }
+
+    @Test
+    void liveProviderFailureIsPersistedWithoutThrowingAwayTheWorkflow() {
+        SmsProperties properties = new SmsProperties();
+        properties.setEnabled(true);
+        properties.setMockMode(false);
+        service = new SmsNotificationService(deliveries, users, properties, twilio);
+        when(deliveries.existsByIdempotencyKey(anyString())).thenReturn(false);
+        when(users.findById(2L)).thenReturn(Optional.of(User.builder().id(2L).phone("+919999999999")
+            .smsNotificationsConsent(true).build()));
+        when(twilio.send(anyString(), anyString())).thenThrow(new IllegalStateException("Twilio rejected the request"));
+
+        service.notifyDonorMatch(2L, 10L);
+
+        ArgumentCaptor<SmsDelivery> delivery = ArgumentCaptor.forClass(SmsDelivery.class);
+        verify(deliveries, times(2)).save(delivery.capture());
+        assertEquals(SmsDelivery.Status.FAILED, delivery.getAllValues().get(1).getStatus());
+        verify(twilio).send(eq("+919999999999"), anyString());
+    }
+
+    @Test
+    void liveProviderAcceptancePersistsTwilioSidAndProviderStatus() {
+        SmsProperties properties = new SmsProperties();
+        properties.setEnabled(true);
+        properties.setMockMode(false);
+        service = new SmsNotificationService(deliveries, users, properties, twilio);
+        when(deliveries.existsByIdempotencyKey(anyString())).thenReturn(false);
+        when(users.findById(2L)).thenReturn(Optional.of(User.builder().id(2L).phone("+919999999999")
+            .smsNotificationsConsent(true).build()));
+        when(twilio.send(anyString(), anyString()))
+            .thenReturn(new TwilioSmsProviderClient.ProviderResponse("SM123", "queued"));
+
+        service.notifyDonorMatch(2L, 10L);
+
+        ArgumentCaptor<SmsDelivery> delivery = ArgumentCaptor.forClass(SmsDelivery.class);
+        verify(deliveries, times(2)).save(delivery.capture());
+        SmsDelivery saved = delivery.getAllValues().get(1);
+        assertEquals(SmsDelivery.Status.SENT, saved.getStatus());
+        assertEquals("SM123", saved.getProviderMessageId());
+        assertEquals("queued", saved.getProviderStatus());
+    }
 }
