@@ -10,6 +10,7 @@ function DonorRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [responding, setResponding] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -53,6 +54,15 @@ function DonorRequests() {
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await loadRequests();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   if (loading) return <div className="page"><div className="container"><p className="no-data">Loading...</p></div></div>;
 
   return (
@@ -62,7 +72,9 @@ function DonorRequests() {
           <ArrowLeft size={18} /> Back
         </button>
         <h1>Requests For You</h1>
-        <div style={{ width: 38 }} />
+        <button className="btn btn-secondary" onClick={handleRefresh} disabled={refreshing}>
+          {refreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
       </div>
 
       <div className="container">

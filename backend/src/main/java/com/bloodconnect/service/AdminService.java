@@ -2,9 +2,11 @@ package com.bloodconnect.service;
 
 import com.bloodconnect.api.dto.DonorProfileResponse;
 import com.bloodconnect.api.dto.UserResponse;
+import com.bloodconnect.domain.entity.BloodRequest;
 import com.bloodconnect.domain.entity.DonorProfile;
 import com.bloodconnect.domain.entity.User;
 import com.bloodconnect.exception.ResourceNotFoundException;
+import com.bloodconnect.repository.BloodRequestRepository;
 import com.bloodconnect.repository.DonorProfileRepository;
 import com.bloodconnect.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,12 @@ public class AdminService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BloodRequestRepository bloodRequestRepository;
+
+    @Autowired
+    private BloodRequestService bloodRequestService;
 
     @Autowired
     private AuditService auditService;
@@ -54,6 +62,8 @@ public class AdminService {
         DonorProfile donorProfile = donorProfileRepository.findById(donorProfileId)
             .orElseThrow(() -> new ResourceNotFoundException("Donor profile not found"));
 
+        boolean becameVerified = verified
+            && donorProfile.getVerificationStatus() != DonorProfile.VerificationStatus.VERIFIED;
         donorProfile.setVerificationStatus(
             verified ? DonorProfile.VerificationStatus.VERIFIED : DonorProfile.VerificationStatus.REJECTED
         );
@@ -62,6 +72,13 @@ public class AdminService {
 
         auditService.logAction("VERIFY_DONOR", "DonorProfile", donorProfile.getId(), null,
             "verified=" + verified, "SUCCESS");
+
+        if (becameVerified && donorProfile.getAvailabilityStatus() == DonorProfile.AvailabilityStatus.AVAILABLE) {
+            List<BloodRequest> searchingRequests = bloodRequestRepository.findByStatus(BloodRequest.Status.SEARCHING);
+            log.info("Rematching {} searching requests after verifying available donor {}",
+                searchingRequests.size(), donorProfile.getId());
+            searchingRequests.forEach(bloodRequestService::matchAndNotifyDonors);
+        }
 
         return mapToResponse(donorProfile);
     }
