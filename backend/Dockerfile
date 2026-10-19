@@ -4,13 +4,13 @@ WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 
-RUN mvn clean package
+RUN mvn -B -ntp clean package
 
 FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
-COPY --from=builder /app/target/bloodconnect-api-1.0.0.jar app.jar
+COPY --from=builder /app/target/*.jar /app/app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
