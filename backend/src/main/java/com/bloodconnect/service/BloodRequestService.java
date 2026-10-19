@@ -3,6 +3,7 @@ package com.bloodconnect.service;
 import com.bloodconnect.api.dto.*;
 import com.bloodconnect.domain.entity.*;
 import com.bloodconnect.exception.BadRequestException;
+import com.bloodconnect.exception.ForbiddenException;
 import com.bloodconnect.exception.ResourceNotFoundException;
 import com.bloodconnect.repository.*;
 import lombok.extern.slf4j.Slf4j;
@@ -159,9 +160,8 @@ public class BloodRequestService {
         BloodRequest bloodRequest = bloodRequestRepository.findById(requestId)
             .orElseThrow(() -> new ResourceNotFoundException("Blood request not found"));
         
-        if (!bloodRequest.getRequesterId().equals(userId)
-            && donorRequestRepository.findByBloodRequestIdAndDonorId(requestId, userId).isEmpty()) {
-            throw new com.bloodconnect.exception.ForbiddenException("Not authorized to view this blood request");
+        if (!bloodRequest.getRequesterId().equals(userId)) {
+            throw new ForbiddenException("Not authorized to view this blood request");
         }
         User requester = userRepository.findById(bloodRequest.getRequesterId())
             .orElseThrow(() -> new ResourceNotFoundException("Requester not found"));

@@ -249,6 +249,7 @@ public class DonorService {
     }
     
     private DonorRequestResponse mapDonorRequestToResponse(DonorRequest donorRequest, BloodRequest bloodRequest, User requester) {
+        boolean isRequesterContactVisible = canViewRequesterContact(donorRequest);
         return DonorRequestResponse.builder()
             .id(donorRequest.getId())
             .bloodRequestId(donorRequest.getBloodRequestId())
@@ -264,17 +265,15 @@ public class DonorService {
                 .urgency(bloodRequest.getUrgency().toString())
                 .status(bloodRequest.getStatus().toString())
                 .location(bloodRequest.getLocation())
-                .latitude(bloodRequest.getLatitude())
-                .longitude(bloodRequest.getLongitude())
-                .contactNumber(canViewRequesterContact(donorRequest) ? bloodRequest.getContactNumber() : null)
+                // Distance is calculated server-side; exact coordinates are not needed by a donor.
+                .latitude(null)
+                .longitude(null)
+                .contactNumber(isRequesterContactVisible ? bloodRequest.getContactNumber() : null)
                 .requiredDatetime(bloodRequest.getRequiredDatetime())
                 .createdAt(bloodRequest.getCreatedAt())
-                .requester(requester != null ? UserResponse.builder()
-                    .id(requester.getId())
+                .requester(isRequesterContactVisible && requester != null ? UserResponse.builder()
                     .name(requester.getName())
-                    .email(requester.getEmail())
                     .phone(requester.getPhone())
-                    .smsNotificationsConsent(requester.getSmsNotificationsConsent())
                     .build() : null)
                 .build() : null)
             .build();
